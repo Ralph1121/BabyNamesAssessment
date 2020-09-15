@@ -7,6 +7,10 @@
 # Licensed under the Apache License, Version 2.0
 # http://www.apache.org/licenses/LICENSE-2.0
 
+import argparse
+import re
+import sys
+__author__ = "Ralph and Mike Boring"
 """
 Define the extract_names() function below and change main()
 to call it.
@@ -31,10 +35,6 @@ Suggested milestones for incremental development:
  - Fix main() to use the extracted_names list
 """
 
-import sys
-import re
-import argparse
-
 
 def extract_names(filename):
     """
@@ -43,9 +43,35 @@ def extract_names(filename):
     the name-rank strings in alphabetical order.
     ['2006', 'Aaliyah 91', 'Aaron 57', 'Abagail 895', ...]
     """
-    names = []
     # +++your code here+++
-    return names
+    sorting_names = []
+    with open(filename) as f:
+        text = f.read()
+        year = r'Popularity\sin\s(\d\d\d\d)'
+        y = re.search(year, text)
+        sorting_names.append(
+            text[y.start():y.end()].replace('Popularity in ', ''))
+        for text_section in text.split():
+            if text_section.startswith('align="right"><td>'):
+                sorting_names.append(
+                    text_section.replace('align="right"><td>', '')
+                    .replace('</td><td>', '').replace('</td>', ''))
+    final_list = []
+    for single_name in sorting_names:
+        if single_name == sorting_names[0]:
+            final_list.append(single_name)
+        else:
+            split_single_name = single_name.split()
+            if len(split_single_name) == 3:
+                if split_single_name[1]+' ' not in ' '.join(final_list):
+                    final_list.append(
+                        split_single_name[1] + ' ' + split_single_name[0])
+                if split_single_name[2] + ' ' not in ' '.join(final_list):
+                    final_list.append(
+                        split_single_name[2] + ' ' + split_single_name[0])
+                continue
+    final_sorted_list = sorted(final_list)
+    return final_sorted_list
 
 
 def create_parser():
@@ -82,7 +108,17 @@ def main(args):
     # Use the create_summary flag to decide whether to print the list
     # or to write the list to a summary file (e.g. `baby1990.html.summary`).
 
-    # +++your code here+++
+    if create_summary:
+        for name_list in file_list:
+            with open(name_list + '.summary', 'w') as f:
+                new_list = extract_names(name_list)
+                for name in new_list:
+                    f.write(name + '\n')
+    else:
+        for name_list in file_list:
+            new_list = extract_names(name_list)
+            for name in new_list:
+                print(name)
 
 
 if __name__ == '__main__':
